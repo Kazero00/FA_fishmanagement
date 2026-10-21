@@ -42,7 +42,7 @@
 
 前置：正版游戏 + [BepInEx 5.4.23.2 **win x64**](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.2)
 
-1. 把 BepInEx 的 `winhttp.dll`、`doorstop_config.ini`、`BepInEx\` 放进游戏根目录（与 `Fantasy Aquarium.exe` 同级）。
+1. 把 BepInEx 5.4.23.2 x64 压缩包内的**全部文件**解压进游戏根目录（与 `Fantasy Aquarium.exe` 同级）。
 2. 把本仓库编译出的 `FantasyAquariumMod.dll` 放进 `BepInEx\plugins\`。
 3. 启动游戏，按 `F10` 打开面板。
 

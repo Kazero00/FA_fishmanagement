@@ -14,7 +14,7 @@
 ## 安装步骤
 
 1. **完全退出游戏**（任务管理器确认 `Fantasy Aquarium.exe` 不在运行）。
-2. 安装 BepInEx：把 BepInEx 5.4.23.2 x64 的 `winhttp.dll`、`doorstop_config.ini`、`dotnet_loader_config.ini`（若有）、`BepInEx\` 解压到**游戏根目录**
+2. 安装 BepInEx：把 BepInEx 5.4.23.2 x64 压缩包里的**全部内容**（`winhttp.dll`、`doorstop_config.ini`、`.doorstop_version`、`changelog.txt`、`BepInEx\`）解压到**游戏根目录**
    （与 `Fantasy Aquarium.exe` 同一层，例如 `E:\SteamLibrary\steamapps\common\FantasyAquarium\`）。
 3. 编译或获取 `FantasyAquariumMod.dll`，放进 `BepInEx\plugins\`。
 4. 直接启动游戏（**不要**给 Steam 加启动参数）。
