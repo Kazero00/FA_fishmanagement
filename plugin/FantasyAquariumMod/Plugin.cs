@@ -18,7 +18,7 @@ namespace FantasyAquariumMod
     ///    因此面板逻辑全部放在静态类 <see cref="FishManagerPanel"/> 里，由
     ///    `SaveLoadCntroller.Update` 的 Postfix 每帧驱动，不依赖任何自己的 MonoBehaviour 回调。
     /// </summary>
-    [BepInPlugin(Guid, "Fantasy Aquarium Mod", "0.8.12")]
+    [BepInPlugin(Guid, "Fantasy Aquarium Mod", "0.8.13")]
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "local.fantasyaquarium.mod";
@@ -40,6 +40,15 @@ namespace FantasyAquariumMod
         internal static ConfigEntry<bool> GrowthCatchUp;
         internal static ConfigEntry<int> GrowthCatchUpIntervalSec;
 
+        // ---- 抽奖机：保留投资额 ----
+        internal static ConfigEntry<bool> KeepLotteryInvestment;
+        internal static ConfigEntry<int> LotteryCount50;
+        internal static ConfigEntry<int> LotteryCount200;
+        internal static ConfigEntry<int> LotteryCount1000;
+
+        /// <summary>供其它类主动保存配置（保留投资额时需要立即落盘）。</summary>
+        internal static ConfigFile Cfg;
+
         private float _nextBeat;
         private int _beats;
 
@@ -59,6 +68,24 @@ namespace FantasyAquariumMod
             GrowthCatchUpIntervalSec = Config.Bind(
                 "Growth", "CatchUpIntervalSec", 45,
                 "补算间隔（秒）。每次对所有非激活鱼缸里的鱼做一次数据层补算。");
+
+            Cfg = Config;
+
+            KeepLotteryInvestment = Config.Bind(
+                "Lottery", "KeepInvestment", true,
+                "抽奖机（好感度投资幸运屋）抽完以后保留当前投资额。\n" +
+                "游戏原行为是每次结算后把 50/200/1000 投资票的次数清零，\n" +
+                "开启后次数会被恢复，并在下次进入机器时沿用（还会写入本配置跨重启保留）。\n" +
+                "关闭则恢复游戏原行为。");
+            LotteryCount50 = Config.Bind(
+                "Lottery", "SavedCount50", 0,
+                "持久化的 50 金币投资票次数（0-10）。由插件自动写入，一般不用手改。");
+            LotteryCount200 = Config.Bind(
+                "Lottery", "SavedCount200", 0,
+                "持久化的 200 金币投资票次数（0-10）。由插件自动写入，一般不用手改。");
+            LotteryCount1000 = Config.Bind(
+                "Lottery", "SavedCount1000", 0,
+                "持久化的 1000 金币投资票次数（0-10）。由插件自动写入，一般不用手改。");
 
             AutoRedirectToOtherTanks = Config.Bind(
                 "MultiTank", "AutoRedirectToOtherTanks", true,
@@ -92,7 +119,7 @@ namespace FantasyAquariumMod
             Log.LogInfo($"[Harmony] 已打补丁 {patched.Count} 处：" +
                         string.Join(", ", patched.Select(m => (m.DeclaringType?.Name ?? "?") + "." + m.Name)));
 
-            Log.LogInfo($"Fantasy Aquarium Mod v0.8.12 loaded. Unity {Application.unityVersion}, " +
+            Log.LogInfo($"Fantasy Aquarium Mod v0.8.13 loaded. Unity {Application.unityVersion}, " +
                         $"unity={Application.persistentDataPath}");
         }
 

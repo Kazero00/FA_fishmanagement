@@ -44,6 +44,12 @@ UseGameCanvas = false            # 高级：UI 是否挂进游戏画布
 [Growth]
 CatchUpInactiveTanks = true      # 非激活鱼缸的鱼也按真实时间补算成长
 CatchUpIntervalSec = 30          # 补算间隔（秒，最小 10）
+
+[Lottery]
+KeepInvestment = true            # 抽奖机抽完后保留投资额
+SavedCount50 = 0                 # 持久化的 50 金币票次数（0-10，插件自动写入）
+SavedCount200 = 0                # 持久化的 200 金币票次数
+SavedCount1000 = 0               # 持久化的 1000 金币票次数
 ```
 
 改完重启游戏生效。

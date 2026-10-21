@@ -79,7 +79,23 @@
 
 ---
 
-## 四、配置项
+## 四、功能 3：抽奖机保留投资额
+
+好感度投资幸运屋的 50 / 200 / 1000 投资票按钮，原版在**每次结算后会把次数清零**，
+所以每抽一次都要重新点一遍（比如 10 次 1000 票 = 10000 金币档）。
+
+现在：结算后**保留当前已选的投资额**，下次打开机器直接沿用，
+并且把三档次数写进 BepInEx 配置，**跨游戏重启也保留**。
+
+细节：
+- 只改"待投资额的选择"，**不会自动结算/自动抽奖**，扣钱仍然由你点「结算」触发；
+- 想清空：在机器里把次数减到 0（右键或「-」），或把配置里的 `SavedCount*` 改成 0；
+- 配置项 `[Lottery] KeepInvestment = false` 可关闭本功能，恢复游戏原行为；
+- 日志会打印 `[Lottery] 已保留投资额：按钮X ×N` / `[Lottery] 已恢复投资额：按钮X ×N`。
+
+---
+
+## 五、配置项
 
 `BepInEx\config\local.fantasyaquarium.mod.cfg`：
 
@@ -101,12 +117,26 @@ ButtonY = 120
 [UI]
 ## false = 插件自建画布（1920x1080 坐标空间，默认）；true = 挂进游戏自己的画布下。
 UseGameCanvas = false
+
+[Growth]
+## 非激活鱼缸里的鱼也按真实时间补算成长。
+CatchUpInactiveTanks = true
+## 补算间隔（秒，最小 10）。
+CatchUpIntervalSec = 45
+
+[Lottery]
+## 抽奖机抽完后保留投资额（下次进入沿用，并写入配置跨重启保留）。
+KeepInvestment = true
+## 持久化的投资票次数（0-10），由插件自动写入。
+SavedCount50 = 0
+SavedCount200 = 0
+SavedCount1000 = 0
 ```
 改完重开游戏生效。（旧版本遗留的 `[AllTanksPanel]` 段已废弃，可整段删掉。）
 
 ---
 
-## 五、怎么确认生效（自测清单）
+## 六、怎么确认生效（自测清单）
 
 启动游戏后打开 `E:\SteamLibrary\steamapps\common\FantasyAquarium\BepInEx\LogOutput.log`：
 
@@ -126,14 +156,14 @@ UseGameCanvas = false
 [Fish] 移动到鱼缸 03：成功 8 条，2 条因目标缸没空位跳过。
 ```
 
-## 六、卸载
+## 七、卸载
 
 删掉游戏根目录这 5 项即可完全恢复原版：
 `winhttp.dll`、`doorstop_config.ini`、`.doorstop_version`、`changelog.txt`、`BepInEx\` 文件夹。
 
 ---
 
-## 七、已知限制
+## 八、已知限制
 
 1. 面板由插件自建画布绘制，**美术风格和游戏原生 UI 不完全一致**（好处是零 prefab 依赖、游戏更新不易失效）。
 2. 用面板切换鱼缸后，游戏原生 HUD（顶部鱼缸名/数值）不会立刻刷新，重新打开对应原生面板即同步。
