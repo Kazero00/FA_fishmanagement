@@ -26,15 +26,18 @@
 
 买鱼时如果当前鱼缸已满，自动把新鱼放进其它有空位的鱼缸（不再被"鱼缸已满"卡住）。
 
-### 游戏问题修复（Harmony 补丁）
+配套：落在非当前鱼缸里的鱼也会按游戏自身的公式定期补算成长，避免长期停在 0%。
+（纯数据层计算，不激活/不移动任何 GameObject。）
+
+### 游戏 bug 修复（Harmony 补丁）
+
+以下均为游戏本身存在的问题（与是否安装本 Mod 无关）：
 
 | 问题 | 修复 |
 |---|---|
 | 成长度被夹成预制体默认上限 `100`（表现为"100% 变 0%"） | 改用鱼的**真实上限**封顶/补算 |
 | `experienceAll` 未初始化时成长度被写成 0 | 进入前修正上限，拿不到上限则整段跳过 |
-| 批量卖出满成长鱼刷 `NullReferenceException` | 卖前置 `experienceAdder.firstIn = true`（游戏对新建鱼的同款做法） |
-| 卖鱼/换缸后游戏原生「鱼缸列表」条目错位 | 补齐 `TankListController.RemoveSoldFish` 同步 |
-| 非当前鱼缸里的鱼长期不成长（大量 0%） | 定期按游戏公式做**纯数据层**成长补算（不触碰渲染对象） |
+| 卖出满成长鱼时 `OnDestroy` 链路抛 `NullReferenceException` | 卖前置 `experienceAdder.firstIn = true`（游戏对新建鱼的同款做法） |
 
 ---
 
@@ -82,20 +85,6 @@ tools/save_edit.py           存档加解密工具（AES-128-CBC）
 docs/INSTALL_zh.md           安装说明（中文）
 docs/CHANGELOG.md            更新记录
 ```
-
----
-
-## 实现要点
-
-游戏是 **Unity 2022.3.54f1 / Mono x64**，Mod 用 BepInEx 5 + HarmonyX 实现。踩到的几个关键坑（详见 [MODDING_GUIDE.md](MODDING_GUIDE.md)）：
-
-* 游戏的主 Canvas 在**自定义 Sorting Layer `UI`** 上，排序层优先于 `sortingOrder`；自绘 UI 必须放到同一层，否则永远被盖住。
-* 由 Chainloader 阶段创建的 `MonoBehaviour` 会在场景加载时被销毁、`Plugin.Update()` 不会跑；
-  因此所有 UI/逻辑写成**静态类**，由 `SaveLoadCntroller.Update` 的 Harmony Postfix 驱动。
-* 面板交互只走 UGUI `Button.onClick`（依赖 EventSystem），避免自建输入循环。
-
-游戏机制实证（稀有度档位、抽奖奖池概率、金币收益公式、成长度模型）整理在
-[plugin/README.md](plugin/README.md) 的附录里，全部由反编译 + 存档数据双向核对得出。
 
 ---
 
