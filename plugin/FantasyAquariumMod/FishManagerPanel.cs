@@ -49,14 +49,15 @@ namespace FantasyAquariumMod
         private static readonly Col[] Columns =
         {
             new Col { Title = "",       X = 0f,     W = 34f,   Anchor = TextAnchor.MiddleCenter },
-            new Col { Title = "名称",    X = 46f,    W = 360f,  Anchor = TextAnchor.MiddleLeft },
-            new Col { Title = "稀有",    X = 416f,   W = 60f,   Anchor = TextAnchor.MiddleCenter },
-            new Col { Title = "体型",    X = 486f,   W = 60f,   Anchor = TextAnchor.MiddleCenter },
-            new Col { Title = "异色",    X = 556f,   W = 60f,   Anchor = TextAnchor.MiddleCenter },
-            new Col { Title = "鱼缸",    X = 626f,   W = 60f,   Anchor = TextAnchor.MiddleCenter },
-            new Col { Title = "收益/天",  X = 696f,   W = 120f,  Anchor = TextAnchor.MiddleRight },
-            new Col { Title = "售价",    X = 826f,   W = 110f,  Anchor = TextAnchor.MiddleRight },
-            new Col { Title = "成长",    X = 946f,   W = 90f,   Anchor = TextAnchor.MiddleRight },
+            new Col { Title = "名称",    X = 40f,    W = 346f,  Anchor = TextAnchor.MiddleLeft },
+            new Col { Title = "稀有",    X = 392f,   W = 58f,   Anchor = TextAnchor.MiddleCenter },
+            new Col { Title = "体型",    X = 458f,   W = 56f,   Anchor = TextAnchor.MiddleCenter },
+            new Col { Title = "异色",    X = 522f,   W = 56f,   Anchor = TextAnchor.MiddleCenter },
+            new Col { Title = "鱼缸",    X = 586f,   W = 56f,   Anchor = TextAnchor.MiddleCenter },
+            new Col { Title = "养成值",  X = 650f,   W = 96f,   Anchor = TextAnchor.MiddleRight },
+            new Col { Title = "收益/天",  X = 754f,   W = 112f,  Anchor = TextAnchor.MiddleRight },
+            new Col { Title = "售价",    X = 874f,   W = 104f,  Anchor = TextAnchor.MiddleRight },
+            new Col { Title = "成长",    X = 986f,   W = 84f,   Anchor = TextAnchor.MiddleRight },
         };
 
         private sealed class Entry
@@ -67,6 +68,7 @@ namespace FantasyAquariumMod
             public int tankNo;
             public int fishId;
             public int rarity;
+            public int growthCap;      // 最大养成值 = fishInfo.experienceAll（养到大只所需总经验）
             public bool isBig;
             public bool isColorful;
             public bool isLocked;
@@ -89,14 +91,15 @@ namespace FantasyAquariumMod
         private static int _filterTank = -1;      // -1 全部
         private static int _filterType;           // 0 全部 / 1 普通 / 2 彩色
         private static int _rarityMask;           // 位掩码：0 = 全部；bit 0..4 = 绿色/蓝色/金色/闪彩/闪彩★（可多选）
-        private static int _filterSize;           // 0 全部 / 1 小 / 2 大
         private static int _filterLock;           // 0 全部 / 1 已锁 / 2 未锁
         private static int _filterGrow;           // 成长：0 全部 / 1 =100% / 2 <100%
 
         private static string _incMin = "", _incMax = "";     // 收益/天
         private static string _sellMin = "", _sellMax = "";   // 售价
-        private static bool _incOn, _sellOn;
+        private static string _growMin = "", _growMax = "";   // 最大养成值（长成大只所需总经验）
+        private static bool _incOn, _sellOn, _growOn;
         private static double _incLo, _incHi, _sellLo, _sellHi;
+        private static double _growLo = double.MinValue, _growHi = double.MaxValue;
         private static bool _rangeDirty;
 
         private static int _sortMode;
@@ -298,8 +301,8 @@ namespace FantasyAquariumMod
             var p = _contentRoot.transform;
 
             // 筛选/分页/排序一变，就取消“二次确认”状态，避免在第一击之后换了条件又误触第二击
-            string sig = $"{_filterTank}|{_filterType}|{_rarityMask}|{_filterSize}|{_filterLock}|{_filterGrow}|" +
-                         $"{_incMin}|{_incMax}|{_sellMin}|{_sellMax}|{_page}|{_sortMode}";
+            string sig = $"{_filterTank}|{_filterType}|{_rarityMask}|{_filterLock}|{_filterGrow}|" +
+                         $"{_incMin}|{_incMax}|{_sellMin}|{_sellMax}|{_growMin}|{_growMax}|{_page}|{_sortMode}";
             if (sig != _lastFilterSig)
             {
                 _lastFilterSig = sig;
@@ -350,6 +353,7 @@ namespace FantasyAquariumMod
                         tankNo = tank.GetTankNo(),
                         fishId = data.fishId,
                         rarity = info.rarity,
+                        growthCap = info.experienceAll,
                         isBig = data.isBig,
                         isColorful = data.type == FishType.Colorful,
                         isLocked = fish.GetLock(),
@@ -465,12 +469,11 @@ namespace FantasyAquariumMod
             if (_filterType == 1 && e.isColorful) return false;
             if (_filterType == 2 && !e.isColorful) return false;
             if (_rarityMask != 0 && (_rarityMask & (1 << e.rarity)) == 0) return false;
-            if (_filterSize == 1 && e.isBig) return false;
-            if (_filterSize == 2 && !e.isBig) return false;
             if (_filterLock == 1 && !e.isLocked) return false;
             if (_filterLock == 2 && e.isLocked) return false;
             if (_incOn && (e.perDay < _incLo || e.perDay > _incHi)) return false;
             if (_sellOn && (e.sell < _sellLo || e.sell > _sellHi)) return false;
+            if (_growOn && (e.growthCap < _growLo || e.growthCap > _growHi)) return false;
             if (_filterGrow == 1 && e.progress < 1f) return false;
             if (_filterGrow == 2 && e.progress >= 1f) return false;
             return true;
@@ -578,6 +581,7 @@ namespace FantasyAquariumMod
         {
             _incOn = ParseRange(_incMin, _incMax, out _incLo, out _incHi);
             _sellOn = ParseRange(_sellMin, _sellMax, out _sellLo, out _sellHi);
+            _growOn = ParseRange(_growMin, _growMax, out _growLo, out _growHi);
 
             _page = 0;
             Rebuild();
@@ -586,10 +590,10 @@ namespace FantasyAquariumMod
 
         private static void ClearRanges()
         {
-            _incMin = _incMax = _sellMin = _sellMax = "";
-            _incOn = _sellOn = false;
-            _incLo = _sellLo = double.MinValue;
-            _incHi = _sellHi = double.MaxValue;
+            _incMin = _incMax = _sellMin = _sellMax = _growMin = _growMax = "";
+            _incOn = _sellOn = _growOn = false;
+            _incLo = _sellLo = _growLo = double.MinValue;
+            _incHi = _sellHi = _growHi = double.MaxValue;
             _page = 0;
             Rebuild();
             Plugin.Log.LogInfo("[Fish] 数值区间已清除。");
@@ -623,14 +627,13 @@ namespace FantasyAquariumMod
                 }
                 parts.Add(UiKit.T("稀有", "rarity") + rs);
             }
-            if (_filterSize == 1) parts.Add(UiKit.T("小", "small"));
-            if (_filterSize == 2) parts.Add(UiKit.T("大", "big"));
             if (_filterLock == 1) parts.Add(UiKit.T("已锁", "locked"));
             if (_filterLock == 2) parts.Add(UiKit.T("未锁", "unlocked"));
             if (_filterGrow == 1) parts.Add(UiKit.T("成年", "adult"));
             if (_filterGrow == 2) parts.Add(UiKit.T("幼年", "juvenile"));
             if (_incOn) parts.Add(UiKit.T("收益", "income") + RangeText(true, _incLo, _incHi));
             if (_sellOn) parts.Add(UiKit.T("售价", "sell") + RangeText(true, _sellLo, _sellHi));
+            if (_growOn) parts.Add(UiKit.T("养成值", "growthcap") + RangeText(true, _growLo, _growHi));
             return parts.Count == 0 ? UiKit.T("无（全部鱼）", "none (all fish)") : string.Join(" + ", parts);
         }
 
@@ -698,75 +701,73 @@ namespace FantasyAquariumMod
                     on ? UiKit.ActiveBtn : UiKit.PrimaryBtn, FontGroup);
             }
 
-            // ---- 体型 ----
-            UiKit.Label("LbSize", p, UiKit.T("体型", "Size"), FontGroup, TextAnchor.MiddleLeft,
-                UiKit.DimColor, 812f, y + 2f, 52f, 30f);
-            string[] sizes = { UiKit.T("全部", "All"), UiKit.T("小", "Sml"), UiKit.T("大", "Big") };
-            for (int i = 0; i < sizes.Length; i++)
-            {
-                int captured = i;
-                UiKit.MakeButton("Size" + i, p, sizes[i], 868f + i * 72f, y, 68f, 32f,
-                    () => { _filterSize = captured; _page = 0; Rebuild(); },
-                    _filterSize == i ? UiKit.ActiveBtn : UiKit.PrimaryBtn, FontGroup);
-            }
-
-            // ---- 锁定状态 ----
+            // ---- 锁定状态（体型筛选已移除：体型与「成长」语义重复，面板保持简洁）----
             UiKit.Label("LbLock", p, UiKit.T("锁定", "Lock"), FontGroup, TextAnchor.MiddleLeft,
-                UiKit.DimColor, 1094f, y + 2f, 52f, 30f);
+                UiKit.DimColor, 812f, y + 2f, 52f, 30f);
             string[] locks = { UiKit.T("全部", "All"), UiKit.T("已锁", "Locked"), UiKit.T("未锁", "Free") };
             for (int i = 0; i < locks.Length; i++)
             {
                 int captured = i;
-                UiKit.MakeButton("Lock" + i, p, locks[i], 1150f + i * 72f, y, 68f, 32f,
+                UiKit.MakeButton("Lock" + i, p, locks[i], 868f + i * 72f, y, 68f, 32f,
                     () => { _filterLock = captured; _page = 0; Rebuild(); },
                     _filterLock == i ? UiKit.ActiveBtn : UiKit.PrimaryBtn, FontGroup);
             }
         }
 
-        /// <summary>数值区间（收益/售价，可只填一边，回车即应用） + 成长三态按钮。</summary>
+        /// <summary>数值区间（收益/售价/养成值，可只填一边，回车即应用） + 成长三态按钮。</summary>
         private static void BuildRangeRow(Transform p)
         {
             float y = 142f;
 
+            // ---- 收益/天 ----
             UiKit.Label("LbInc", p, UiKit.T("收益/天", "Income"), FontGroup, TextAnchor.MiddleLeft,
-                UiKit.DimColor, 26f, y + 2f, 66f, 30f);
-            UiKit.MakeInput("IncMin", p, _incMin, UiKit.T("最小", "min"), 94f, y, 116f, 32f, FontGroup,
+                UiKit.DimColor, 26f, y + 2f, 60f, 30f);
+            UiKit.MakeInput("IncMin", p, _incMin, UiKit.T("最小", "min"), 88f, y, 104f, 32f, FontGroup,
                 t => _incMin = t, t => _rangeDirty = true);
-            UiKit.Label("TildeInc", p, "~", FontGroup, TextAnchor.MiddleCenter, UiKit.DimColor, 212f, y + 2f, 14f, 30f);
-            UiKit.MakeInput("IncMax", p, _incMax, UiKit.T("最大", "max"), 228f, y, 116f, 32f, FontGroup,
+            UiKit.Label("TildeInc", p, "~", FontGroup, TextAnchor.MiddleCenter, UiKit.DimColor, 194f, y + 2f, 12f, 30f);
+            UiKit.MakeInput("IncMax", p, _incMax, UiKit.T("最大", "max"), 208f, y, 104f, 32f, FontGroup,
                 t => _incMax = t, t => _rangeDirty = true);
 
+            // ---- 售价 ----
             UiKit.Label("LbSell", p, UiKit.T("售价", "Sell"), FontGroup, TextAnchor.MiddleLeft,
-                UiKit.DimColor, 356f, y + 2f, 52f, 30f);
-            UiKit.MakeInput("SellMin", p, _sellMin, UiKit.T("最小", "min"), 410f, y, 116f, 32f, FontGroup,
+                UiKit.DimColor, 320f, y + 2f, 44f, 30f);
+            UiKit.MakeInput("SellMin", p, _sellMin, UiKit.T("最小", "min"), 366f, y, 104f, 32f, FontGroup,
                 t => _sellMin = t, t => _rangeDirty = true);
-            UiKit.Label("TildeSell", p, "~", FontGroup, TextAnchor.MiddleCenter, UiKit.DimColor, 528f, y + 2f, 14f, 30f);
-            UiKit.MakeInput("SellMax", p, _sellMax, UiKit.T("最大", "max"), 544f, y, 116f, 32f, FontGroup,
+            UiKit.Label("TildeSell", p, "~", FontGroup, TextAnchor.MiddleCenter, UiKit.DimColor, 472f, y + 2f, 12f, 30f);
+            UiKit.MakeInput("SellMax", p, _sellMax, UiKit.T("最大", "max"), 486f, y, 104f, 32f, FontGroup,
                 t => _sellMax = t, t => _rangeDirty = true);
 
-            // 成长：三态按钮（全部 / 正好 100% / 未满 100%）
+            // ---- 最大养成值（= 长成大只所需总经验 experienceAll，越小越快养大）----
+            UiKit.Label("LbGrowCap", p, UiKit.T("养成值", "GrowthCap"), FontGroup, TextAnchor.MiddleLeft,
+                UiKit.DimColor, 598f, y + 2f, 58f, 30f);
+            UiKit.MakeInput("GrowMin", p, _growMin, UiKit.T("最小", "min"), 658f, y, 104f, 32f, FontGroup,
+                t => _growMin = t, t => _rangeDirty = true);
+            UiKit.Label("TildeGrow", p, "~", FontGroup, TextAnchor.MiddleCenter, UiKit.DimColor, 764f, y + 2f, 12f, 30f);
+            UiKit.MakeInput("GrowMax", p, _growMax, UiKit.T("最大", "max"), 778f, y, 104f, 32f, FontGroup,
+                t => _growMax = t, t => _rangeDirty = true);
+
+            // ---- 成长：三态按钮（全部 / 成年 / 幼年）----
             UiKit.Label("LbGrow", p, UiKit.T("成长", "Growth"), FontGroup, TextAnchor.MiddleLeft,
-                UiKit.DimColor, 676f, y + 2f, 52f, 30f);
+                UiKit.DimColor, 890f, y + 2f, 44f, 30f);
 
             string[] growLabels = { UiKit.T("全部", "All"), UiKit.T("成年", "Adult"), UiKit.T("幼年", "Juvenile") };
-            float[] growX = { 732f, 810f, 888f };
-            float[] growW = { 74f, 74f, 74f };
+            float[] growX = { 936f, 1006f, 1076f };
             for (int i = 0; i < growLabels.Length; i++)
             {
                 int captured = i;
-                UiKit.MakeButton("Grow" + i, p, growLabels[i], growX[i], y, growW[i], 32f,
+                UiKit.MakeButton("Grow" + i, p, growLabels[i], growX[i], y, 66f, 32f,
                     () => { _filterGrow = captured; _page = 0; Rebuild(); },
                     _filterGrow == i ? UiKit.ActiveBtn : UiKit.PrimaryBtn, FontGroup);
             }
 
             // 延迟一帧执行，避免在输入框事件处理中销毁控件
-            UiKit.MakeButton("RangeApply", p, UiKit.T("应用", "Apply"), 990f, y, 100f, 32f,
+            UiKit.MakeButton("RangeApply", p, UiKit.T("应用", "Apply"), 1152f, y, 84f, 32f,
                 () => { _rangeDirty = true; }, UiKit.PrimaryBtn, FontButton);
-            UiKit.MakeButton("RangeClear", p, UiKit.T("清除", "Clear"), 1096f, y, 100f, 32f,
+            UiKit.MakeButton("RangeClear", p, UiKit.T("清除", "Clear"), 1244f, y, 84f, 32f,
                 ClearRanges, UiKit.DisabledBtn, FontButton);
 
-            UiKit.Label("RangeNote", p, UiKit.T("留空 = 该方向不限；回车即应用", "empty = no bound; Enter applies"),
-                FontHint, TextAnchor.MiddleLeft, UiKit.DimColor, 1206f, y + 2f, 280f, 30f);
+            UiKit.Label("RangeNote", p, UiKit.T("留空=不限", "empty = no bound"),
+                FontHint, TextAnchor.MiddleLeft, UiKit.DimColor, 1336f, y + 2f, 134f, 30f);
         }
 
         private static void BuildSummary(Transform p, int pages)
@@ -861,25 +862,26 @@ namespace FantasyAquariumMod
             DrawCell(row, 4, e.isColorful ? UiKit.T("异色", "Alt") : "-",
                 e.isColorful ? UiKit.ActiveBtn : UiKit.DimColor);
             DrawCell(row, 5, $"{e.tankNo + 1:00}", UiKit.TextColor);
-            DrawCell(row, 6, e.perDay.ToString("N1"), UiKit.TextColor);
-            DrawCell(row, 7, e.sell.ToString("N1"), UiKit.HeaderColor);
-            DrawCell(row, 8, FormatGrowth(e), UiKit.TextColor);
+            DrawCell(row, 6, e.growthCap.ToString("N0"), UiKit.DimColor);
+            DrawCell(row, 7, e.perDay.ToString("N1"), UiKit.TextColor);
+            DrawCell(row, 8, e.sell.ToString("N1"), UiKit.HeaderColor);
+            DrawCell(row, 9, FormatGrowth(e), UiKit.TextColor);
 
             if (e.isLocked)
             {
-                UiKit.MakeButton("Sell", row.transform, UiKit.T("锁定中", "Locked"), 1050f, 5f, 80f, 22f,
+                UiKit.MakeButton("Sell", row.transform, UiKit.T("锁定中", "Locked"), 1084f, 5f, 80f, 22f,
                     () => { }, UiKit.DisabledBtn, FontRowButton);
             }
             else
             {
-                UiKit.MakeButton("Sell", row.transform, UiKit.T("卖出", "Sell"), 1050f, 5f, 80f, 22f,
+                UiKit.MakeButton("Sell", row.transform, UiKit.T("卖出", "Sell"), 1084f, 5f, 80f, 22f,
                     () => SellOne(e), UiKit.DangerBtn, FontRowButton);
             }
 
             UiKit.MakeButton("Lock", row.transform, e.isLocked ? UiKit.T("解锁", "Unlock") : UiKit.T("锁定", "Lock"),
-                1140f, 5f, 80f, 22f, () => ToggleLock(e), UiKit.PrimaryBtn, FontRowButton);
+                1172f, 5f, 80f, 22f, () => ToggleLock(e), UiKit.PrimaryBtn, FontRowButton);
 
-            UiKit.MakeButton("Focus", row.transform, UiKit.T("所在缸", "Goto"), 1230f, 5f, 90f, 22f,
+            UiKit.MakeButton("Focus", row.transform, UiKit.T("所在缸", "Goto"), 1260f, 5f, 90f, 22f,
                 () => GotoTank(e), UiKit.PrimaryBtn, FontRowButton);
         }
 

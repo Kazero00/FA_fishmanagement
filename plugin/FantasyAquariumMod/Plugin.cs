@@ -18,7 +18,7 @@ namespace FantasyAquariumMod
     ///    因此面板逻辑全部放在静态类 <see cref="FishManagerPanel"/> 里，由
     ///    `SaveLoadCntroller.Update` 的 Postfix 每帧驱动，不依赖任何自己的 MonoBehaviour 回调。
     /// </summary>
-    [BepInPlugin(Guid, "Fantasy Aquarium Mod", "0.8.13")]
+    [BepInPlugin(Guid, "Fantasy Aquarium Mod", "0.8.14")]
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "local.fantasyaquarium.mod";
@@ -119,7 +119,7 @@ namespace FantasyAquariumMod
             Log.LogInfo($"[Harmony] 已打补丁 {patched.Count} 处：" +
                         string.Join(", ", patched.Select(m => (m.DeclaringType?.Name ?? "?") + "." + m.Name)));
 
-            Log.LogInfo($"Fantasy Aquarium Mod v0.8.13 loaded. Unity {Application.unityVersion}, " +
+            Log.LogInfo($"Fantasy Aquarium Mod v0.8.14 loaded. Unity {Application.unityVersion}, " +
                         $"unity={Application.persistentDataPath}");
         }
 
