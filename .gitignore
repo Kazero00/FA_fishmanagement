@@ -1,0 +1,31 @@
+# 构建产物
+bin/
+obj/
+*.dll
+*.pdb
+!plugin/FantasyAquariumMod/refs/*.dll
+
+# 发布包（如需分发请用 GitHub Releases）
+release/
+*.zip
+
+# 本地报告 / 存档 / 游戏数据（含个人数据，不入库）
+reports/
+*.dat
+*.log
+Player*.log
+
+# BepInEx 运行时
+BepInEx/
+
+# 编辑器/系统
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc

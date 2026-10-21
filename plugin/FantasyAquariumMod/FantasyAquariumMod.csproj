@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>FantasyAquariumMod</AssemblyName>
+    <RootNamespace>FantasyAquariumMod</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <DebugType>none</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- 游戏根目录（Steam 默认安装路径） -->
+    <GameDir Condition="'$(GameDir)' == ''">/mnt/e/SteamLibrary/steamapps/common/FantasyAquarium</GameDir>
+    <ManagedDir>$(GameDir)/Fantasy Aquarium_Data/Managed</ManagedDir>
+    <!-- 装好 BepInEx 后其 core 目录就在游戏根目录下；如需从解压目录编译可 -p:BepInExDir=... -->
+    <BepInExDir Condition="'$(BepInExDir)' == ''">$(GameDir)</BepInExDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BepInEx 5.4.23.2 win x64 的运行时程序集 -->
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDir)/BepInEx/core/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDir)/BepInEx/core/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 游戏本体程序集与 Unity 引擎程序集 -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)/UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Unity 2022 把引擎 API 拆成多个模块程序集，整体引用最省事 -->
+    <Reference Include="$(ManagedDir)/UnityEngine.*.dll">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
